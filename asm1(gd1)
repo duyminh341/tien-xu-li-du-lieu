@@ -1,0 +1,41 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# 1. Đọc dữ liệu
+df = pd.read_csv("data.csv")
+
+# 2. Khám phá dữ liệu
+print(df.info())
+print(df.describe())
+
+# Kiểm tra missing & trùng lặp
+print(df.isnull().sum())
+print("Duplicate:", df.duplicated().sum())
+
+# 3. Vẽ biểu đồ (ví dụ cột giá)
+sns.histplot(df["price"], kde=True)
+plt.show()
+
+sns.boxplot(x=df["price"])
+plt.show()
+
+# 4. Xử lý dữ liệu
+
+# Điền missing
+df["price"] = df["price"].fillna(df["price"].median())
+df["area"] = df["area"].fillna(df["area"].mean())
+
+# Với categorical
+df["type"] = df["type"].fillna(df["type"].mode()[0])
+
+# Xử lý dữ liệu sai
+df = df[df["price"] > 0]        # bỏ giá âm
+df = df[df["rooms"] > 0]       # bỏ phòng = 0
+
+# Xóa trùng lặp
+df.drop_duplicates(inplace=True)
+
+# 5. Lưu dữ liệu sạch
+df.to_csv("clean_data.csv", index=False)
