@@ -1,0 +1,43 @@
+# PHÂN TÍCH DỮ LIỆU - NGẮN GỌN, DỄ HIỂU
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+def explore_and_scale(path, title):
+	print(f'\n===== {title} =====')
+	df = pd.read_csv(path)
+	print(df.head())
+	print('Missing:', df.isnull().sum().sum())
+	print(df.describe())
+	# Vẽ histogram & boxplot
+	for col in df.columns:
+		df[col].plot(kind='hist', title=f'Histogram {col}')
+		plt.show()
+		df.boxplot(column=col)
+		plt.title(f'Boxplot {col}')
+		plt.show()
+	# Chuẩn hóa
+	minmax = MinMaxScaler().fit_transform(df)
+	zscore = StandardScaler().fit_transform(df)
+	# So sánh phân phối
+	for i, col in enumerate(df.columns):
+		plt.hist(df[col], alpha=0.5, label='Gốc')
+		plt.hist(minmax[:, i], alpha=0.5, label='Min-Max')
+		plt.hist(zscore[:, i], alpha=0.5, label='Z-Score')
+		plt.title(f'So sánh {col}')
+		plt.legend()
+		plt.show()
+# Bài 1: Chỉ số công ty (Finance)
+explore_and_scale('Lab3/ITA105_Lab_3_Finance.csv', 'Bài 1: Chỉ số công ty')
+
+# Bài 2: Chỉ số bệnh nhân (Health)
+explore_and_scale('Lab3/ITA105_Lab_3_Health.csv', 'Bài 2: Chỉ số bệnh nhân')
+
+# Bài 3: Chỉ số vận động viên (Sports)
+explore_and_scale('Lab3/ITA105_Lab_3_Sports.csv', 'Bài 3: Chỉ số vận động viên')
+
+
+# Bài 3 mở rộng: Chỉ số game thủ (Gaming)
+explore_and_scale('Lab3/ITA105_Lab_3_Gaming.csv', 'Bài 3 mở rộng: Chỉ số game thủ')
+
+# Bài 4: Người chơi trực tuyến (Online Player)
+explore_and_scale('Lab3/ITA105_Lab_3_Gaming.csv', 'Bài 4: Người chơi trực tuyến')
