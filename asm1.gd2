@@ -1,0 +1,86 @@
+
+# DATA CLEANING PIPELINE
+# Phần 3, 4, 5
+
+
+import pandas as pd
+import numpy as np
+from pathlib import Path
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+
+# 1. ĐỌC DỮ LIỆU (ví dụ)
+
+script_dir = Path(__file__).resolve().parent
+data_path = script_dir / "data.csv"
+
+if not data_path.exists():
+    raise FileNotFoundError(
+        f"Không tìm thấy tập tin dữ liệu: {data_path}.\n"
+        "Đặt file data.csv cùng thư mục với phan345.py hoặc cập nhật đường dẫn."
+    )
+
+df = pd.read_csv(data_path)
+
+required_columns = {'price', 'area', 'location', 'type', 'description'}
+missing_columns = required_columns - set(df.columns)
+if missing_columns:
+    raise ValueError(
+        f"File dữ liệu thiếu cột bắt buộc: {', '.join(sorted(missing_columns))}."
+    )
+
+
+# PHẦN 3: OUTLIERS
+
+
+def remove_outliers(df, col):
+    Q1 = df[col].quantile(0.25)
+    Q3 = df[col].quantile(0.75)
+    IQR = Q3 - Q1
+
+    lower = Q1 - 1.5 * IQR
+    upper = Q3 + 1.5 * IQR
+
+    return df[(df[col] >= lower) & (df[col] <= upper)]
+
+
+df = remove_outliers(df, 'price')
+
+
+# PHẦN 4: CHUẨN HÓA
+
+
+scaler = MinMaxScaler()
+df[['price', 'area']] = scaler.fit_transform(df[['price', 'area']])
+
+
+df = pd.get_dummies(df, columns=['location'])
+
+
+df['type'] = df['type'].astype('category').cat.codes
+
+tfidf = TfidfVectorizer(max_features=100)
+text_matrix = tfidf.fit_transform(df['description'])
+
+
+# PHẦN 5: TÌM DUPLICATE
+
+
+similarity = cosine_similarity(text_matrix)
+
+threshold = 0.8
+duplicates = []
+
+for i in range(len(similarity)):
+    for j in range(i + 1, len(similarity)):
+        if similarity[i][j] > threshold:
+            duplicates.append((i, j))
+
+print("Các bản ghi trùng:", duplicates)
+
+
+df.to_csv("cleaned_data.csv", index=False)
+
+print("Xử lý xong!")
